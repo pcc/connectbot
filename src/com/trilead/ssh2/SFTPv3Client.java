@@ -70,7 +70,7 @@ public class SFTPv3Client
 	OutputStream os;
 
 	int protocol_version = 0;
-	HashMap server_extensions = new HashMap();
+	HashMap<String, byte[]> server_extensions = new HashMap<String, byte[]>();
 
 	int next_request_id = 1000;
 
@@ -703,9 +703,9 @@ public class SFTPv3Client
 		throw new SFTPException(tr.readString(), errorCode);
 	}
 
-	private final Vector scanDirectory(byte[] handle) throws IOException
+	private final Vector<SFTPv3DirectoryEntry> scanDirectory(byte[] handle) throws IOException
 	{
-		Vector files = new Vector();
+		Vector<SFTPv3DirectoryEntry> files = new Vector<SFTPv3DirectoryEntry>();
 
 		while (true)
 		{
@@ -925,10 +925,10 @@ public class SFTPv3Client
 	 * @return A Vector containing {@link SFTPv3DirectoryEntry} objects.
 	 * @throws IOException
 	 */
-	public Vector ls(String dirName) throws IOException
+	public Vector<SFTPv3DirectoryEntry> ls(String dirName) throws IOException
 	{
 		byte[] handle = openDirectory(dirName);
-		Vector result = scanDirectory(handle);
+		Vector<SFTPv3DirectoryEntry> result = scanDirectory(handle);
 		closeHandle(handle);
 		return result;
 	}
