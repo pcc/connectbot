@@ -765,6 +765,13 @@ public class ConsoleActivity extends Activity {
 		ftp = menu.add(R.string.console_menu_filetransfer);
 		ftp.setAlphabeticShortcut('t');
 		ftp.setEnabled(sessionOpen && canTransferFiles);
+		ftp.setOnMenuItemClickListener(new OnMenuItemClickListener() {
+			public boolean onMenuItemClick(MenuItem item) {
+				Intent intent = new Intent(ConsoleActivity.this, FileTransferActivity.class);
+				ConsoleActivity.this.startActivityForResult(intent, REQUEST_EDIT);
+				return true;
+			}
+		});
 
 		return true;
 	}
