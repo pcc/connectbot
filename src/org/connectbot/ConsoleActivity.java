@@ -121,7 +121,7 @@ public class ConsoleActivity extends Activity {
 
 	private InputMethodManager inputManager;
 
-	private MenuItem disconnect, copy, paste, portForward, resize, urlscan;
+	private MenuItem disconnect, copy, paste, portForward, resize, urlscan, ftp;
 
 	protected TerminalBridge copySource = null;
 	private int lastTouchRow, lastTouchCol;
@@ -615,12 +615,14 @@ public class ConsoleActivity extends Activity {
 		boolean sessionOpen = false;
 		boolean disconnected = false;
 		boolean canForwardPorts = false;
+		boolean canTransferFiles = false;
 
 		if (activeTerminal) {
 			TerminalBridge bridge = ((TerminalView) view).bridge;
 			sessionOpen = bridge.isSessionOpen();
 			disconnected = bridge.isDisconnected();
 			canForwardPorts = bridge.canFowardPorts();
+			canTransferFiles = bridge.canTransferFiles();
 		}
 
 		menu.setQwertyMode(true);
@@ -760,6 +762,10 @@ public class ConsoleActivity extends Activity {
 			}
 		});
 
+		ftp = menu.add(R.string.console_menu_filetransfer);
+		ftp.setAlphabeticShortcut('t');
+		ftp.setEnabled(sessionOpen && canTransferFiles);
+
 		return true;
 	}
 
@@ -774,12 +780,14 @@ public class ConsoleActivity extends Activity {
 		boolean sessionOpen = false;
 		boolean disconnected = false;
 		boolean canForwardPorts = false;
+		boolean canTransferFiles = false;
 
 		if (activeTerminal) {
 			TerminalBridge bridge = ((TerminalView) view).bridge;
 			sessionOpen = bridge.isSessionOpen();
 			disconnected = bridge.isDisconnected();
 			canForwardPorts = bridge.canFowardPorts();
+			canTransferFiles = bridge.canTransferFiles();
 		}
 
 		disconnect.setEnabled(activeTerminal);
@@ -792,6 +800,7 @@ public class ConsoleActivity extends Activity {
 		portForward.setEnabled(sessionOpen && canForwardPorts);
 		urlscan.setEnabled(activeTerminal);
 		resize.setEnabled(sessionOpen);
+		ftp.setEnabled(sessionOpen && canTransferFiles);
 
 		return true;
 	}

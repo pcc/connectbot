@@ -829,6 +829,10 @@ public class TerminalBridge implements VDUDisplay {
 		return transport.canForwardPorts();
 	}
 
+	public boolean canTransferFiles() {
+		return transport.canTransferFiles();
+	}
+
 	/**
 	 * Adds the {@link PortForwardBean} to the list.
 	 * @param portForward the port forward bean to add
