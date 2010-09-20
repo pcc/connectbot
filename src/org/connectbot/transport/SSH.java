@@ -950,4 +950,9 @@ public class SSH extends AbsTransport implements ConnectionMonitor, InteractiveC
 	public boolean usesNetwork() {
 		return true;
 	}
+
+	public boolean canTransferFiles() {
+		return true;
+	}
+
 }
