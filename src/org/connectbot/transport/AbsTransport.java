@@ -251,4 +251,11 @@ public abstract class AbsTransport {
 	 * @return
 	 */
 	public abstract boolean usesNetwork();
+
+	public boolean canTransferFiles() { return false; }
+
+	public FileTransferSession createFileTransferSession() {
+		return null;
+	}
+
 }
