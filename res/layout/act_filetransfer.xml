@@ -15,16 +15,14 @@
             android:id="@android:id/tabcontent"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent">
-            <TextView 
+            <ListView 
                 android:id="@+id/localview"
                 android:layout_width="fill_parent"
-                android:layout_height="fill_parent" 
-                android:text="Local" />
-            <TextView 
+                android:layout_height="fill_parent" />
+            <ListView 
                 android:id="@+id/remoteview"
                 android:layout_width="fill_parent"
-                android:layout_height="fill_parent" 
-                android:text="Remote" />
+                android:layout_height="fill_parent" />
         </FrameLayout>
     </LinearLayout>
 </TabHost>
