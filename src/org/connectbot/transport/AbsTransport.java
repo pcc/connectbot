@@ -254,7 +254,7 @@ public abstract class AbsTransport {
 
 	public boolean canTransferFiles() { return false; }
 
-	public FileTransferSession createFileTransferSession() {
+	public FileTransferSession createFileTransferSession() throws IOException {
 		return null;
 	}
 
