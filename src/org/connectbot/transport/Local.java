@@ -17,6 +17,7 @@
 
 package org.connectbot.transport;
 
+import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -216,4 +217,15 @@ public class Local extends AbsTransport {
 	public boolean usesNetwork() {
 		return false;
 	}
+
+	@Override
+	public boolean canTransferFiles() {
+		return true;
+	}
+
+	@Override
+	public FileTransferSession createFileTransferSession() throws IOException {
+		return new LocalFileTransferSession(new File("/"));
+	}
+
 }
