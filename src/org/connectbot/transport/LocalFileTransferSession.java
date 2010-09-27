@@ -35,10 +35,8 @@ public class LocalFileTransferSession implements FileTransferSession {
 		return fi;
 	}
 
-	public FileInfo[] ls(String path) throws IOException {
-		File lsDir = relFile(path);
-		assertDir(lsDir);
-		File files[] = lsDir.listFiles();
+	public FileInfo[] ls() throws IOException {
+		File files[] = currentDirectory.listFiles();
 		ArrayList<FileInfo> infos = new ArrayList<FileInfo>();
 		for (File f : files) {
 			infos.add(asFileInfo(f));

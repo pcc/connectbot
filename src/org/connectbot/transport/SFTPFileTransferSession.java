@@ -38,8 +38,8 @@ public class SFTPFileTransferSession implements FileTransferSession {
 		return info;
 	}
 
-	public FileInfo[] ls(String path) throws IOException {
-		Vector<SFTPv3DirectoryEntry> list = sftp.ls(path);
+	public FileInfo[] ls() throws IOException {
+		Vector<SFTPv3DirectoryEntry> list = sftp.ls(currentDirectory);
 		ArrayList<FileInfo> infos = new ArrayList<FileInfo>();
 		for (SFTPv3DirectoryEntry entry : list) {
 			infos.add(asFileInfo(entry));
