@@ -61,6 +61,7 @@ import com.trilead.ssh2.KnownHosts;
 import com.trilead.ssh2.LocalPortForwarder;
 import com.trilead.ssh2.ServerHostKeyVerifier;
 import com.trilead.ssh2.Session;
+import com.trilead.ssh2.SFTPv3Client;
 import com.trilead.ssh2.crypto.PEMDecoder;
 import com.trilead.ssh2.signature.DSAPrivateKey;
 import com.trilead.ssh2.signature.DSAPublicKey;
@@ -953,6 +954,10 @@ public class SSH extends AbsTransport implements ConnectionMonitor, InteractiveC
 
 	public boolean canTransferFiles() {
 		return true;
+	}
+
+	public FileTransferSession createFileTransferSession() throws IOException {
+		return new SFTPFileTransferSession(new SFTPv3Client(connection));
 	}
 
 }
