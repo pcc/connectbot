@@ -30,6 +30,7 @@ import org.connectbot.bean.HostBean;
 import org.connectbot.bean.PortForwardBean;
 import org.connectbot.bean.SelectionArea;
 import org.connectbot.transport.AbsTransport;
+import org.connectbot.transport.FileTransferSession;
 import org.connectbot.transport.TransportFactory;
 import org.connectbot.util.HostDatabase;
 
@@ -73,6 +74,7 @@ public class TerminalBridge implements VDUDisplay {
 	public HostBean host;
 
 	/* package */ AbsTransport transport;
+	FileTransferSession fileTransfer = null;
 
 	final Paint defaultPaint;
 
@@ -1006,4 +1008,11 @@ public class TerminalBridge implements VDUDisplay {
 	public void decreaseFontSize() {
 		setFontSize(fontSize - FONT_SIZE_STEP);
 	}
+
+	public FileTransferSession getFileTransferSession() throws IOException {
+		if (fileTransfer == null)
+			fileTransfer = transport.createFileTransferSession();
+		return fileTransfer;
+	}
+
 }
