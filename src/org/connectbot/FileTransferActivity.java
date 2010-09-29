@@ -11,7 +11,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TabHost;
@@ -70,7 +72,7 @@ public class FileTransferActivity extends Activity {
 				TerminalManager bound = ((TerminalManager.TerminalBinder) service).getService();
 
 				hostBridge = bound.getConnectedBridge(host);
-	//			updateHandler.sendEmptyMessage(-1);
+				updateHandler.sendEmptyMessage(-1);
 			}
 
 			public void onServiceDisconnected(ComponentName name) {
@@ -119,6 +121,19 @@ public class FileTransferActivity extends Activity {
 			hostdb.close();
 			hostdb = null;
 		}
+	}
+
+	protected Handler updateHandler = new Handler() {
+		@Override
+		public void handleMessage(Message msg) {
+			FileTransferActivity.this.updateList();
+		}
+	};
+
+	private void updateList() {
+		String hostBridgeState[] = { hostBridge == null ? "(null)" : hostBridge.toString() };
+		ArrayAdapter<String> hostBridgeStateAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, hostBridgeState);
+		listRemote.setAdapter(hostBridgeStateAdapter);
 	}
 
 }
