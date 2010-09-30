@@ -18,8 +18,10 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
+import android.view.Window;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TabHost;
@@ -67,6 +69,7 @@ public class FileTransferActivity extends Activity {
 	@Override
 	public void onCreate(Bundle b) {
 		super.onCreate(b);
+		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 		setContentView(R.layout.act_filetransfer);
 
 		long hostId = this.getIntent().getLongExtra(Intent.EXTRA_TITLE, -1);
@@ -132,7 +135,13 @@ public class FileTransferActivity extends Activity {
 	protected Handler updateHandler = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {
-			FileTransferActivity.this.updateList();
+			setProgressBarIndeterminateVisibility(true);
+			
+			new Thread() {
+				public void run() {
+					FileTransferActivity.this.updateList();
+				}
+			}.start();
 		}
 	};
 
@@ -142,13 +151,19 @@ public class FileTransferActivity extends Activity {
 		try {
 			FileTransferSession fxSession = hostBridge.getFileTransferSession();
 			FileInfo files[] = fxSession.ls();
-			ArrayList<String> fileNames = new ArrayList<String>();
+			final ArrayList<String> fileNames = new ArrayList<String>();
 			for (FileInfo file : files) {
 				fileNames.add(file.name);
 			}
 
-			ArrayAdapter<String> fileNamesAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, fileNames);
-			listRemote.setAdapter(fileNamesAdapter);
+			new Handler(Looper.getMainLooper()) {
+				public void handleMessage(Message msg) {
+					ArrayAdapter<String> fileNamesAdapter = new ArrayAdapter<String>(FileTransferActivity.this, android.R.layout.simple_list_item_1, fileNames);
+					listRemote.setAdapter(fileNamesAdapter);
+
+					setProgressBarIndeterminateVisibility(false);
+				}
+			}.sendEmptyMessage(-1);
 		} catch (IOException e) {
 			Log.e("connectbot", "Caught IOException " + e.toString());
 		}
