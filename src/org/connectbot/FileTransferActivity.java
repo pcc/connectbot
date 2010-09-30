@@ -1,8 +1,13 @@
 package org.connectbot;
 
+import java.io.IOException;
+import java.util.ArrayList;
+
 import org.connectbot.bean.HostBean;
 import org.connectbot.service.TerminalBridge;
 import org.connectbot.service.TerminalManager;
+import org.connectbot.transport.FileTransferSession;
+import org.connectbot.transport.FileInfo;
 import org.connectbot.util.HostDatabase;
 
 import android.app.Activity;
@@ -14,6 +19,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TabHost;
@@ -131,9 +137,21 @@ public class FileTransferActivity extends Activity {
 	};
 
 	private void updateList() {
-		String hostBridgeState[] = { hostBridge == null ? "(null)" : hostBridge.toString() };
-		ArrayAdapter<String> hostBridgeStateAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, hostBridgeState);
-		listRemote.setAdapter(hostBridgeStateAdapter);
+		if (hostBridge == null) return;
+
+		try {
+			FileTransferSession fxSession = hostBridge.getFileTransferSession();
+			FileInfo files[] = fxSession.ls();
+			ArrayList<String> fileNames = new ArrayList<String>();
+			for (FileInfo file : files) {
+				fileNames.add(file.name);
+			}
+
+			ArrayAdapter<String> fileNamesAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, fileNames);
+			listRemote.setAdapter(fileNamesAdapter);
+		} catch (IOException e) {
+			Log.e("connectbot", "Caught IOException " + e.toString());
+		}
 	}
 
 }
