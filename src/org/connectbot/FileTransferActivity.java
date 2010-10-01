@@ -21,7 +21,10 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
+import android.view.View;
 import android.view.Window;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TabHost;
@@ -66,6 +69,8 @@ public class FileTransferActivity extends Activity {
 	private ServiceConnection connection = null;
 	protected TerminalBridge hostBridge = null;
 
+	private boolean updating = false;
+
 	@Override
 	public void onCreate(Bundle b) {
 		super.onCreate(b);
@@ -108,6 +113,13 @@ public class FileTransferActivity extends Activity {
 		ArrayAdapter<String> alphabetAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, alphabet);
 		listLocal.setAdapter(alphabetAdapter);
 		listRemote.setAdapter(alphabetAdapter);
+
+		listRemote.setOnItemClickListener(new OnItemClickListener() {
+			public void onItemClick(AdapterView parent, View view, int position, long id) {
+				String path = parent.getItemAtPosition(position).toString();
+				updateList(path);
+			}
+		});
 	}
 
 	@Override
@@ -135,21 +147,34 @@ public class FileTransferActivity extends Activity {
 	protected Handler updateHandler = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {
-			setProgressBarIndeterminateVisibility(true);
-			
-			new Thread() {
-				public void run() {
-					FileTransferActivity.this.updateList();
-				}
-			}.start();
+			updateList(null);
 		}
 	};
 
-	private void updateList() {
+	protected void updateList(final String path) {
+		if (hostBridge != null) {
+			synchronized (this) {
+				if (updating)
+					return;
+				updating = true;
+			}
+			setProgressBarIndeterminateVisibility(true);
+
+			new Thread() {
+				public void run() {
+					FileTransferActivity.this.doUpdateList(path);
+				}
+			}.start();
+		}
+	}
+
+	private void doUpdateList(String path) {
 		if (hostBridge == null) return;
 
 		try {
 			FileTransferSession fxSession = hostBridge.getFileTransferSession();
+			if (path != null)
+				fxSession.cd(path);
 			FileInfo files[] = fxSession.ls();
 			final ArrayList<String> fileNames = new ArrayList<String>();
 			for (FileInfo file : files) {
@@ -162,6 +187,7 @@ public class FileTransferActivity extends Activity {
 					listRemote.setAdapter(fileNamesAdapter);
 
 					setProgressBarIndeterminateVisibility(false);
+					updating = false;
 				}
 			}.sendEmptyMessage(-1);
 		} catch (IOException e) {
