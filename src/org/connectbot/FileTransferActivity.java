@@ -2,6 +2,7 @@ package org.connectbot;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.connectbot.bean.HostBean;
 import org.connectbot.service.TerminalBridge;
@@ -176,6 +177,7 @@ public class FileTransferActivity extends Activity {
 			if (path != null)
 				fxSession.cd(path);
 			FileInfo files[] = fxSession.ls();
+			Arrays.sort(files);
 			final ArrayList<String> fileNames = new ArrayList<String>();
 			for (FileInfo file : files) {
 				fileNames.add(file.name);
