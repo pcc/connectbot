@@ -1,5 +1,6 @@
 package org.connectbot;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,9 +10,11 @@ import org.connectbot.service.TerminalBridge;
 import org.connectbot.service.TerminalManager;
 import org.connectbot.transport.FileTransferSession;
 import org.connectbot.transport.FileInfo;
+import org.connectbot.transport.LocalFileTransferSession;
 import org.connectbot.util.HostDatabase;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -70,7 +73,117 @@ public class FileTransferActivity extends Activity {
 	private ServiceConnection connection = null;
 	protected TerminalBridge hostBridge = null;
 
-	private boolean updating = false;
+	private short updateCount = 0;
+
+	private interface FXSessionSource {
+		FileTransferSession getSession() throws IOException;
+	}
+
+	private class FileTransferController {
+
+		private ListView view;
+		private FXSessionSource ss;
+		private String currentDirectory;
+		private Handler onDirectoryChange;
+		private boolean updating;
+
+		public FileTransferController(ListView view, FXSessionSource ss, Handler onDirectoryChange) {
+			this.view = view;
+			this.ss = ss;
+			this.onDirectoryChange = onDirectoryChange;
+
+			view.setOnItemClickListener(new OnItemClickListener() {
+				public void onItemClick(AdapterView parent, View view, int position, long id) {
+					String path = parent.getItemAtPosition(position).toString();
+					navigate(path);
+				}
+			});
+		}
+
+		public void navigate(final String path) {
+			synchronized (this) {
+				if (updating)
+					return;
+				updating = true;
+			}
+			synchronized (FileTransferActivity.this) {
+				updateCount++;
+				if (updateCount == 1)
+					setProgressBarIndeterminateVisibility(true);
+			}
+
+			new Thread() {
+				public void run() {
+					doNavigate(path);
+				}
+			}.start();
+		}
+
+		private void doNavigate(String path) {
+			try {
+				FileTransferSession fxSession = ss.getSession();
+				if (fxSession == null)
+					return;
+				if (path != null)
+					fxSession.cd(path);
+
+				String oldDirectory = currentDirectory;
+				currentDirectory = fxSession.pwd();
+				onDirectoryChange.sendEmptyMessage(-1);
+
+				try {
+					FileInfo files[] = fxSession.ls();
+					Arrays.sort(files);
+					final ArrayList<String> fileNames = new ArrayList<String>();
+					for (FileInfo file : files) {
+						fileNames.add(file.name);
+					}
+
+					new Handler(Looper.getMainLooper()) {
+						public void handleMessage(Message msg) {
+							ArrayAdapter<String> fileNamesAdapter = new ArrayAdapter<String>(FileTransferActivity.this, android.R.layout.simple_list_item_1, fileNames);
+							view.setAdapter(fileNamesAdapter);
+
+							synchronized (FileTransferActivity.this) {
+								updateCount--;
+								if (updateCount == 0)
+									setProgressBarIndeterminateVisibility(false);
+							}
+							updating = false;
+						}
+					}.sendEmptyMessage(-1);
+				} catch (IOException e) {
+					try {
+						fxSession.cd(oldDirectory);
+					} catch (Exception e2) {}
+					throw e;
+				}
+			} catch (final IOException e) {
+				new Handler(Looper.getMainLooper()) {
+					public void handleMessage(Message msg) {
+						new AlertDialog.Builder(FileTransferActivity.this)
+							.setTitle("Error")
+							.setMessage(e.getMessage())
+							.setPositiveButton("OK", null)
+							.show();
+						synchronized (FileTransferActivity.this) {
+							updateCount--;
+							if (updateCount == 0)
+								setProgressBarIndeterminateVisibility(false);
+						}
+						updating = false;
+
+					}
+				}.sendEmptyMessage(-1);
+			}
+		}
+
+		public String getCurrentDirectory() {
+			return currentDirectory;
+		}
+	}
+
+	FileTransferController localController, remoteController;
 
 	@Override
 	public void onCreate(Bundle b) {
@@ -111,16 +224,23 @@ public class FileTransferActivity extends Activity {
 		listLocal = (ListView) findViewById(R.id.localview);
 		listRemote = (ListView) findViewById(R.id.remoteview);
 
-		ArrayAdapter<String> alphabetAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, alphabet);
-		listLocal.setAdapter(alphabetAdapter);
-		listRemote.setAdapter(alphabetAdapter);
-
-		listRemote.setOnItemClickListener(new OnItemClickListener() {
-			public void onItemClick(AdapterView parent, View view, int position, long id) {
-				String path = parent.getItemAtPosition(position).toString();
-				updateList(path);
+		localController = new FileTransferController(listLocal, new FXSessionSource() {
+			FileTransferSession localSession = null;
+			public FileTransferSession getSession() throws IOException {
+				if (localSession == null)
+					localSession = new LocalFileTransferSession(new File("/"));
+				return localSession;
 			}
-		});
+		}, dirChangeHandler);
+		localController.navigate(null);
+
+		remoteController = new FileTransferController(listRemote, new FXSessionSource() {
+			public FileTransferSession getSession() throws IOException {
+				if (hostBridge == null)
+					return null;
+				return hostBridge.getFileTransferSession();
+			}
+		}, dirChangeHandler);
 	}
 
 	@Override
@@ -148,53 +268,18 @@ public class FileTransferActivity extends Activity {
 	protected Handler updateHandler = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {
-			updateList(null);
+			remoteController.navigate(null);
 		}
 	};
 
-	protected void updateList(final String path) {
-		if (hostBridge != null) {
-			synchronized (this) {
-				if (updating)
-					return;
-				updating = true;
-			}
-			setProgressBarIndeterminateVisibility(true);
-
-			new Thread() {
-				public void run() {
-					FileTransferActivity.this.doUpdateList(path);
-				}
-			}.start();
+	protected Handler dirChangeHandler = new Handler() {
+		@Override
+		public void handleMessage(Message msg) {
+			updateCurrentDirectory();
 		}
-	}
+	};
 
-	private void doUpdateList(String path) {
-		if (hostBridge == null) return;
-
-		try {
-			FileTransferSession fxSession = hostBridge.getFileTransferSession();
-			if (path != null)
-				fxSession.cd(path);
-			FileInfo files[] = fxSession.ls();
-			Arrays.sort(files);
-			final ArrayList<String> fileNames = new ArrayList<String>();
-			for (FileInfo file : files) {
-				fileNames.add(file.name);
-			}
-
-			new Handler(Looper.getMainLooper()) {
-				public void handleMessage(Message msg) {
-					ArrayAdapter<String> fileNamesAdapter = new ArrayAdapter<String>(FileTransferActivity.this, android.R.layout.simple_list_item_1, fileNames);
-					listRemote.setAdapter(fileNamesAdapter);
-
-					setProgressBarIndeterminateVisibility(false);
-					updating = false;
-				}
-			}.sendEmptyMessage(-1);
-		} catch (IOException e) {
-			Log.e("connectbot", "Caught IOException " + e.toString());
-		}
+	private void updateCurrentDirectory() {
 	}
 
 }
