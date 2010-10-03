@@ -30,6 +30,10 @@ public class LocalFileTransferSession implements FileTransferSession {
 		currentDirectory = nextDir;
 	}
 
+	public String pwd() {
+		return currentDirectory.toString();
+	}
+
 	protected FileInfo asFileInfo(File f) {
 		FileInfo fi = new FileInfo();
 		fi.name = f.getName();

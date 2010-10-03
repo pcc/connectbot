@@ -31,6 +31,10 @@ public class SFTPFileTransferSession implements FileTransferSession {
 		currentDirectory = nextDir;
 	}
 
+	public String pwd() {
+		return currentDirectory;
+	}
+
 	private FileInfo asFileInfo(SFTPv3DirectoryEntry entry) {
 		FileInfo info = new FileInfo();
 		info.name = entry.filename;
