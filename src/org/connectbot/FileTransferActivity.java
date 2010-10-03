@@ -33,10 +33,12 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TabHost;
 import android.widget.TabHost.TabSpec;
+import android.widget.TabHost.OnTabChangeListener;
 
 public class FileTransferActivity extends Activity {
 
 	private ListView listLocal, listRemote;
+	private TabHost tabs = null;
 
 	private static String alphabet[] = {
 		"A",
@@ -208,7 +210,7 @@ public class FileTransferActivity extends Activity {
 			}
 		};
 
-		TabHost tabs = (TabHost) findViewById(android.R.id.tabhost);
+		tabs = (TabHost) findViewById(android.R.id.tabhost);
 		tabs.setup();
 
 		TabSpec tsLocal = tabs.newTabSpec("Local");
@@ -220,6 +222,12 @@ public class FileTransferActivity extends Activity {
 		tsRemote.setIndicator("Remote");
 		tsRemote.setContent(R.id.remoteview);
 		tabs.addTab(tsRemote);
+
+		tabs.setOnTabChangedListener(new OnTabChangeListener() {
+			public void onTabChanged(String id) {
+				updateCurrentDirectory();
+			}
+		});
 
 		listLocal = (ListView) findViewById(R.id.localview);
 		listRemote = (ListView) findViewById(R.id.remoteview);
@@ -280,6 +288,16 @@ public class FileTransferActivity extends Activity {
 	};
 
 	private void updateCurrentDirectory() {
+		String curTabTag = tabs.getCurrentTabTag();
+		String curDir;
+		if (curTabTag.equals("Local")) {
+			curDir = localController.getCurrentDirectory();
+		} else { // Remote
+			curDir = remoteController.getCurrentDirectory();
+		}
+		if (curDir == null)
+			curDir = "???";
+		setTitle(curDir);
 	}
 
 }
