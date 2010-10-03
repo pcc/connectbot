@@ -11,6 +11,8 @@ public class LocalFileTransferSession implements FileTransferSession {
 	protected void assertDir(File dir) throws IOException {
 		if (!dir.isDirectory())
 			throw new IOException("Target is not a directory");
+		if (!dir.canRead())
+			throw new IOException("Unable to read directory");
 	}
 
 	public LocalFileTransferSession(File startingDirectory) throws IOException {
@@ -37,6 +39,8 @@ public class LocalFileTransferSession implements FileTransferSession {
 
 	public FileInfo[] ls() throws IOException {
 		File files[] = currentDirectory.listFiles();
+		if (files == null)
+			throw new IOException("Unable to read directory");
 		ArrayList<FileInfo> infos = new ArrayList<FileInfo>();
 		for (File f : files) {
 			infos.add(asFileInfo(f));
