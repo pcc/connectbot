@@ -157,7 +157,11 @@ public class FileTransferActivity extends Activity {
 				} catch (IOException e) {
 					try {
 						fxSession.cd(oldDirectory);
-					} catch (Exception e2) {}
+						currentDirectory = oldDirectory;
+						onDirectoryChange.sendEmptyMessage(-1);
+					} catch (Exception e2) {
+						Log.e("connectbot", "Error encountered changing back to old directory "+oldDirectory+": "+e2.toString());
+					}
 					throw e;
 				}
 			} catch (final IOException e) {
