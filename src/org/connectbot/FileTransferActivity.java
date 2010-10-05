@@ -315,7 +315,9 @@ public class FileTransferActivity extends Activity {
 			} else
 				holder = (ViewHolder) convertView.getTag();
 
-			holder.filename.setText("filename");
+			FileInfo fi = getItem(position);
+
+			holder.filename.setText(fi.name);
 			holder.size.setText("size");
 			holder.perms.setText("perms");
 
