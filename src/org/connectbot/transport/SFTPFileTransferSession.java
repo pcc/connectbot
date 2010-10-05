@@ -40,6 +40,7 @@ public class SFTPFileTransferSession implements FileTransferSession {
 		info.name = entry.filename;
 		info.isDirectory = entry.attributes.isDirectory();
 		info.size = entry.attributes.size;
+		info.permissions = entry.attributes.permissions;
 		return info;
 	}
 
