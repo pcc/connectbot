@@ -14,6 +14,8 @@ import org.connectbot.transport.FileInfo;
 import org.connectbot.transport.LocalFileTransferSession;
 import org.connectbot.util.HostDatabase;
 
+import static com.trilead.ssh2.sftp.AttribPermissions.*;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ComponentName;
@@ -297,6 +299,21 @@ public class FileTransferActivity extends Activity {
 		setTitle(curDir);
 	}
 
+	private String formatPermissions(int perms) {
+		char permStr[] = { '-', '-', '-', '-', '-', '-', '-', '-', '-', '-' };
+		if ((perms & S_IFMT) == S_IFDIR) permStr[0] = 'd';
+		if ((perms & S_IRUSR) != 0)      permStr[1] = 'r';
+		if ((perms & S_IWUSR) != 0)      permStr[2] = 'w';
+		if ((perms & S_IXUSR) != 0)      permStr[3] = 'x';
+		if ((perms & S_IRGRP) != 0)      permStr[4] = 'r';
+		if ((perms & S_IWGRP) != 0)      permStr[5] = 'w';
+		if ((perms & S_IXGRP) != 0)      permStr[6] = 'x';
+		if ((perms & S_IROTH) != 0)      permStr[7] = 'r';
+		if ((perms & S_IWOTH) != 0)      permStr[8] = 'w';
+		if ((perms & S_IXOTH) != 0)      permStr[9] = 'x';
+		return new String(permStr);
+	}
+
 	class FileAdapter extends ArrayAdapter<FileInfo> {
 
 		class ViewHolder {
@@ -335,7 +352,9 @@ public class FileTransferActivity extends Activity {
 			holder.size.setText(!fi.isDirectory && fi.size != null
 					? Formatter.formatFileSize(FileTransferActivity.this, fi.size.longValue())
 					: "");
-			holder.perms.setText("perms");
+			holder.perms.setText(fi.permissions != null
+					? formatPermissions(fi.permissions.intValue())
+					: "");
 
 			return convertView;
 		}
