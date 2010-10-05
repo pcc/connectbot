@@ -25,6 +25,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
+import android.text.format.Formatter;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -326,7 +327,9 @@ public class FileTransferActivity extends Activity {
 
 			holder.icon.setImageResource(fi.isDirectory ? R.drawable.ic_folder : R.drawable.ic_file);
 			holder.filename.setText(fi.name);
-			holder.size.setText("size");
+			holder.size.setText(!fi.isDirectory && fi.size != null
+					? Formatter.formatFileSize(FileTransferActivity.this, fi.size.longValue())
+					: "");
 			holder.perms.setText("perms");
 
 			return convertView;
