@@ -117,14 +117,19 @@ public class FileTransferActivity extends Activity {
 					Arrays.sort(files);
 					final ArrayList<FileInfo> fileList = new ArrayList<FileInfo>();
 
-					FileInfo parentDir = new FileInfo();
-					parentDir.name = "..";
-					parentDir.isDirectory = true;
-					fileList.add(parentDir);
-
 					for (FileInfo file : files) {
-						if (file.name.equals(".") || file.name.equals("..")) continue;
-						fileList.add(file);
+						if (file.name.equals(".")) continue;
+						if (file.name.equals(".."))
+							fileList.add(0, file);
+						else
+							fileList.add(file);
+					}
+
+					if (!fileList.get(0).name.equals("..")) {
+						FileInfo parentDir = new FileInfo();
+						parentDir.name = "..";
+						parentDir.isDirectory = true;
+						fileList.add(0, parentDir);
 					}
 
 					new Handler(Looper.getMainLooper()) {
