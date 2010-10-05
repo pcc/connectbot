@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.connectbot.bean.HostBean;
 import org.connectbot.service.TerminalBridge;
@@ -25,15 +26,19 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TabHost;
 import android.widget.TabHost.TabSpec;
 import android.widget.TabHost.OnTabChangeListener;
+import android.widget.TextView;
 
 public class FileTransferActivity extends Activity {
 
@@ -45,6 +50,8 @@ public class FileTransferActivity extends Activity {
 
 	private ServiceConnection connection = null;
 	protected TerminalBridge hostBridge = null;
+
+	protected LayoutInflater inflater = null;
 
 	private short updateCount = 0;
 
@@ -224,6 +231,8 @@ public class FileTransferActivity extends Activity {
 				return hostBridge.getFileTransferSession();
 			}
 		}, dirChangeHandler);
+
+		inflater = LayoutInflater.from(this);
 	}
 
 	@Override
@@ -273,6 +282,45 @@ public class FileTransferActivity extends Activity {
 		if (curDir == null)
 			curDir = "???";
 		setTitle(curDir);
+	}
+
+	class FileAdapter extends ArrayAdapter<FileInfo> {
+
+		class ViewHolder {
+			public ImageView icon;
+			public TextView filename;
+			public TextView size;
+			public TextView perms;
+		}
+
+		public FileAdapter(Context context, List<FileInfo> files) {
+			super(context, R.layout.item_file, files);
+		}
+
+		@Override
+		public View getView(int position, View convertView, ViewGroup parent) {
+			ViewHolder holder;
+
+			if (convertView == null) {
+				convertView = inflater.inflate(R.layout.item_file, null, false);
+
+				holder = new ViewHolder();
+
+				holder.icon = (ImageView)convertView.findViewById(android.R.id.icon);
+				holder.filename = (TextView)convertView.findViewById(android.R.id.text1);
+				holder.size = (TextView)convertView.findViewById(R.id.size);
+				holder.perms = (TextView)convertView.findViewById(R.id.perms);
+
+				convertView.setTag(holder);
+			} else
+				holder = (ViewHolder) convertView.getTag();
+
+			holder.filename.setText("filename");
+			holder.size.setText("size");
+			holder.perms.setText("perms");
+
+			return convertView;
+		}
 	}
 
 }
