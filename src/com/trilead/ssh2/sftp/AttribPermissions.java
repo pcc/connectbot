@@ -29,4 +29,12 @@ public class AttribPermissions
 	public static final int S_ISUID = 04000;
 	public static final int S_ISGID = 02000;
 	public static final int S_ISVTX = 01000;
+	public static final int S_IFMT   = 0170000;
+	public static final int S_IFSOCK = 0140000;
+	public static final int S_IFLNK  = 0120000;
+	public static final int S_IFREG  = 0100000;
+	public static final int S_IFBLK  = 0060000;
+	public static final int S_IFDIR  = 0040000;
+	public static final int S_IFCHR  = 0020000;
+	public static final int S_IFIFO  = 0010000;
 }
