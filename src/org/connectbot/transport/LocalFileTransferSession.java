@@ -38,6 +38,7 @@ public class LocalFileTransferSession implements FileTransferSession {
 		FileInfo fi = new FileInfo();
 		fi.name = f.getName();
 		fi.isDirectory = f.isDirectory();
+		fi.size = new Long(f.length());
 		return fi;
 	}
 
