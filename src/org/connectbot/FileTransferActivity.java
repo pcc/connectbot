@@ -317,6 +317,7 @@ public class FileTransferActivity extends Activity {
 
 			FileInfo fi = getItem(position);
 
+			holder.icon.setImageResource(fi.isDirectory ? R.drawable.ic_folder : R.drawable.ic_file);
 			holder.filename.setText(fi.name);
 			holder.size.setText("size");
 			holder.perms.setText("perms");
