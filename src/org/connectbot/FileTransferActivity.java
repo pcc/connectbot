@@ -114,15 +114,22 @@ public class FileTransferActivity extends Activity {
 				try {
 					FileInfo files[] = fxSession.ls();
 					Arrays.sort(files);
-					final ArrayList<String> fileNames = new ArrayList<String>();
+					final ArrayList<FileInfo> fileList = new ArrayList<FileInfo>();
+
+					FileInfo parentDir = new FileInfo();
+					parentDir.name = "..";
+					parentDir.isDirectory = true;
+					fileList.add(parentDir);
+
 					for (FileInfo file : files) {
-						fileNames.add(file.name);
+						if (file.name.equals(".") || file.name.equals("..")) continue;
+						fileList.add(file);
 					}
 
 					new Handler(Looper.getMainLooper()) {
 						public void handleMessage(Message msg) {
-							ArrayAdapter<String> fileNamesAdapter = new ArrayAdapter<String>(FileTransferActivity.this, android.R.layout.simple_list_item_1, fileNames);
-							view.setAdapter(fileNamesAdapter);
+							FileAdapter fileAdapter = new FileAdapter(FileTransferActivity.this, fileList);
+							view.setAdapter(fileAdapter);
 
 							synchronized (FileTransferActivity.this) {
 								updateCount--;
