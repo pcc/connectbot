@@ -19,8 +19,11 @@ package org.connectbot.service;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -30,7 +33,7 @@ import org.connectbot.bean.HostBean;
 import org.connectbot.bean.PortForwardBean;
 import org.connectbot.bean.SelectionArea;
 import org.connectbot.transport.AbsTransport;
-import org.connectbot.transport.FileTransferSession;
+import org.connectbot.transport.FileTransport;
 import org.connectbot.transport.TransportFactory;
 import org.connectbot.util.HostDatabase;
 
@@ -55,8 +58,8 @@ import de.mud.terminal.vt320;
  * service. A TerminalView shares down a bitmap that we can use for rendering
  * when available.
  *
- * This class also provides SSH hostkey verification prompting, and password
- * prompting.
+ * This class also provides SSH hostkey verification prompting, password
+ * prompting and manages the list of free file transports.
  */
 public class TerminalBridge implements VDUDisplay {
 	public final static String TAG = "ConnectBot.TerminalBridge";
@@ -74,7 +77,7 @@ public class TerminalBridge implements VDUDisplay {
 	public HostBean host;
 
 	/* package */ AbsTransport transport;
-	FileTransferSession fileTransfer = null;
+	Set<FileTransport> freeFileTransports = new HashSet<FileTransport>();
 
 	final Paint defaultPaint;
 
@@ -1009,10 +1012,22 @@ public class TerminalBridge implements VDUDisplay {
 		setFontSize(fontSize - FONT_SIZE_STEP);
 	}
 
-	public FileTransferSession getFileTransferSession() throws IOException {
-		if (fileTransfer == null)
-			fileTransfer = transport.createFileTransferSession();
-		return fileTransfer;
+	public FileTransport getFileTransport() throws IOException {
+		synchronized (freeFileTransports) {
+			if (!freeFileTransports.isEmpty()) {
+				Iterator<FileTransport> i = freeFileTransports.iterator();
+				FileTransport fileTransport = i.next();
+				i.remove();
+				return fileTransport;
+			}
+		}
+		return transport.createFileTransport();
+	}
+
+	public void releaseFileTransport(FileTransport transport) {
+		synchronized (freeFileTransports) {
+			freeFileTransports.add(transport);
+		}
 	}
 
 }

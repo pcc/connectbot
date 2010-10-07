@@ -224,8 +224,8 @@ public class Local extends AbsTransport {
 	}
 
 	@Override
-	public FileTransferSession createFileTransferSession() throws IOException {
-		return new LocalFileTransferSession(new File("/"));
+	public FileTransport createFileTransport() throws IOException {
+		return new LocalFileTransport();
 	}
 
 }

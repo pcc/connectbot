@@ -9,9 +9,9 @@ import java.util.List;
 import org.connectbot.bean.HostBean;
 import org.connectbot.service.TerminalBridge;
 import org.connectbot.service.TerminalManager;
-import org.connectbot.transport.FileTransferSession;
+import org.connectbot.transport.FileTransport;
 import org.connectbot.transport.FileInfo;
-import org.connectbot.transport.LocalFileTransferSession;
+import org.connectbot.transport.LocalFileTransport;
 import org.connectbot.util.HostDatabase;
 
 import static com.trilead.ssh2.sftp.AttribPermissions.*;
@@ -58,21 +58,22 @@ public class FileTransferActivity extends Activity {
 
 	private short updateCount = 0;
 
-	private interface FXSessionSource {
-		FileTransferSession getSession() throws IOException;
+	private interface FileTransportSource {
+		FileTransport getTransport() throws IOException;
+		void close();
 	}
 
 	private class FileTransferController {
 
 		private ListView view;
-		private FXSessionSource ss;
+		private FileTransportSource ts;
 		private String currentDirectory;
 		private Handler onDirectoryChange;
 		private boolean updating;
 
-		public FileTransferController(ListView view, FXSessionSource ss, Handler onDirectoryChange) {
+		public FileTransferController(ListView view, FileTransportSource ts, Handler onDirectoryChange) {
 			this.view = view;
-			this.ss = ss;
+			this.ts = ts;
 			this.onDirectoryChange = onDirectoryChange;
 
 			view.setOnItemClickListener(new OnItemClickListener() {
@@ -104,18 +105,20 @@ public class FileTransferActivity extends Activity {
 
 		private void doNavigate(String path) {
 			try {
-				FileTransferSession fxSession = ss.getSession();
-				if (fxSession == null)
+				FileTransport fileTransport = ts.getTransport();
+				if (fileTransport == null)
 					return;
-				if (path != null)
-					fxSession.cd(path);
 
 				String oldDirectory = currentDirectory;
-				currentDirectory = fxSession.pwd();
+				String nextDirectory = currentDirectory != null ? currentDirectory : fileTransport.startingDirectory();
+				if (path != null)
+					nextDirectory = fileTransport.realpath(nextDirectory, path);
+
+				currentDirectory = nextDirectory;
 				onDirectoryChange.sendEmptyMessage(-1);
 
 				try {
-					FileInfo files[] = fxSession.ls();
+					FileInfo files[] = fileTransport.ls(nextDirectory);
 					Arrays.sort(files);
 					final ArrayList<FileInfo> fileList = new ArrayList<FileInfo>();
 
@@ -148,13 +151,8 @@ public class FileTransferActivity extends Activity {
 						}
 					}.sendEmptyMessage(-1);
 				} catch (IOException e) {
-					try {
-						fxSession.cd(oldDirectory);
-						currentDirectory = oldDirectory;
-						onDirectoryChange.sendEmptyMessage(-1);
-					} catch (Exception e2) {
-						Log.e("connectbot", "Error encountered changing back to old directory "+oldDirectory+": "+e2.toString());
-					}
+					currentDirectory = oldDirectory;
+					onDirectoryChange.sendEmptyMessage(-1);
 					throw e;
 				}
 			} catch (final IOException e) {
@@ -180,6 +178,11 @@ public class FileTransferActivity extends Activity {
 		public String getCurrentDirectory() {
 			return currentDirectory;
 		}
+
+		public void close() {
+			ts.close();
+		}
+
 	}
 
 	FileTransferController localController, remoteController;
@@ -203,6 +206,9 @@ public class FileTransferActivity extends Activity {
 			}
 
 			public void onServiceDisconnected(ComponentName name) {
+				localController.close();
+				remoteController.close();
+
 				hostBridge = null;
 			}
 		};
@@ -229,21 +235,32 @@ public class FileTransferActivity extends Activity {
 		listLocal = (ListView) findViewById(R.id.localview);
 		listRemote = (ListView) findViewById(R.id.remoteview);
 
-		localController = new FileTransferController(listLocal, new FXSessionSource() {
-			FileTransferSession localSession = null;
-			public FileTransferSession getSession() throws IOException {
-				if (localSession == null)
-					localSession = new LocalFileTransferSession(new File("/"));
-				return localSession;
+		localController = new FileTransferController(listLocal, new FileTransportSource() {
+			FileTransport localTransport = null;
+			public FileTransport getTransport() throws IOException {
+				if (localTransport == null)
+					localTransport = new LocalFileTransport();
+				return localTransport;
+			}
+			public void close() {
+				localTransport = null;
 			}
 		}, dirChangeHandler);
 		localController.navigate(null);
 
-		remoteController = new FileTransferController(listRemote, new FXSessionSource() {
-			public FileTransferSession getSession() throws IOException {
+		remoteController = new FileTransferController(listRemote, new FileTransportSource() {
+			FileTransport fileTransport = null;
+			public FileTransport getTransport() throws IOException {
+				if (fileTransport != null)
+					return fileTransport;
 				if (hostBridge == null)
 					return null;
-				return hostBridge.getFileTransferSession();
+				fileTransport = hostBridge.getFileTransport();
+				return fileTransport;
+			}
+			public void close() {
+				hostBridge.releaseFileTransport(fileTransport);
+				fileTransport = null;
 			}
 		}, dirChangeHandler);
 

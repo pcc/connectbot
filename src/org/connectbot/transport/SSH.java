@@ -956,8 +956,8 @@ public class SSH extends AbsTransport implements ConnectionMonitor, InteractiveC
 		return true;
 	}
 
-	public FileTransferSession createFileTransferSession() throws IOException {
-		return new SFTPFileTransferSession(new SFTPv3Client(connection));
+	public FileTransport createFileTransport() throws IOException {
+		return new SFTPFileTransport(new SFTPv3Client(connection));
 	}
 
 }
