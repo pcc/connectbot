@@ -17,6 +17,7 @@
 
 package org.connectbot.service;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.HashSet;
@@ -37,6 +38,8 @@ import org.connectbot.transport.FileTransport;
 import org.connectbot.transport.TransportFactory;
 import org.connectbot.util.HostDatabase;
 
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -1028,6 +1031,31 @@ public class TerminalBridge implements VDUDisplay {
 		synchronized (freeFileTransports) {
 			freeFileTransports.add(transport);
 		}
+	}
+
+	public void startFileUpload(final String localPath, final String remotePath) {
+		new Thread() {
+			public void run() {
+				NotificationManager nm = (NotificationManager) manager.getSystemService(Context.NOTIFICATION_SERVICE);
+				FileTransport fileTransport = null;
+				try {
+					fileTransport = getFileTransport();
+					FileInputStream in = new FileInputStream(localPath);
+					fileTransport.put(remotePath, in);
+
+					Notification n = new Notification();
+					n.setLatestEventInfo(manager, "Upload Successful", localPath + " uploaded to " + remotePath, null);
+					nm.notify(3, n);
+				} catch (IOException e) {
+					Notification n = new Notification();
+					n.setLatestEventInfo(manager, "Upload Failed", e.getMessage(), null);
+					nm.notify(3, n);
+				} finally {
+					if (fileTransport != null)
+						releaseFileTransport(fileTransport);
+				}
+			}
+		}.start();
 	}
 
 }
