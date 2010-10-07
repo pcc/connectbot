@@ -2,6 +2,7 @@ package org.connectbot.transport;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 
 public class LocalFileTransport implements FileTransport {
@@ -39,5 +40,7 @@ public class LocalFileTransport implements FileTransport {
 		}
 		return infos.toArray(new FileInfo[infos.size()]);
 	}
+
+	public void put(String path, InputStream in) throws IOException {}
 
 }

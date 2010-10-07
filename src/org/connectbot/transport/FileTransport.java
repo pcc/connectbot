@@ -1,6 +1,7 @@
 package org.connectbot.transport;
 
 import java.io.IOException;
+import java.io.InputStream;
 
 public interface FileTransport {
 
@@ -8,5 +9,7 @@ public interface FileTransport {
 	FileInfo stat(String dir) throws IOException;
 	FileInfo[] ls(String dir) throws IOException;
 	String realpath(String pwd, String dir) throws IOException;
+
+	void put(String path, InputStream in) throws IOException;
 
 }

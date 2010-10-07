@@ -2,12 +2,14 @@ package org.connectbot.transport;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Vector;
 
 import com.trilead.ssh2.SFTPv3Client;
 import com.trilead.ssh2.SFTPv3DirectoryEntry;
 import com.trilead.ssh2.SFTPv3FileAttributes;
+import com.trilead.ssh2.SFTPv3FileHandle;
 
 public class SFTPFileTransport implements FileTransport {
 
@@ -52,4 +54,22 @@ public class SFTPFileTransport implements FileTransport {
 		}
 		return infos.toArray(new FileInfo[infos.size()]);
 	}
+
+	public void put(String path, InputStream in) throws IOException {
+		SFTPv3FileHandle fh = sftp.createFileTruncate(path);
+
+		byte buf[] = new byte[32768];
+		long ofs = 0;
+		while (true) {
+			int len = in.read(buf);
+			if (len <= 0)
+				break;
+
+			sftp.write(fh, ofs, buf, 0, len);
+			ofs += 32768;
+		}
+
+		sftp.closeFile(fh);
+	}
+
 }
