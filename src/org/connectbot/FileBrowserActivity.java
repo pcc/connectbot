@@ -68,18 +68,24 @@ public class FileBrowserActivity extends Activity {
 		private ListView view;
 		private FileTransportSource ts;
 		private String currentDirectory;
-		private Handler onDirectoryChange;
+		private Handler onDirectoryChange, onFileSelected;
 		private boolean updating;
 
-		public FileTransferController(ListView view, FileTransportSource ts, Handler onDirectoryChange) {
+		public FileTransferController(ListView view, FileTransportSource ts, Handler onDirectoryChange, Handler onFileSelected) {
 			this.view = view;
 			this.ts = ts;
 			this.onDirectoryChange = onDirectoryChange;
+			this.onFileSelected = onFileSelected;
 
 			view.setOnItemClickListener(new OnItemClickListener() {
 				public void onItemClick(AdapterView parent, View view, int position, long id) {
-					String path = parent.getItemAtPosition(position).toString();
-					navigate(path);
+					FileInfo fi = (FileInfo) parent.getItemAtPosition(position);
+					if (fi.isDirectory) {
+						navigate(fi.name);
+					} else {
+						Message msg = Message.obtain(FileTransferController.this.onFileSelected, 0, fi);
+						FileTransferController.this.onFileSelected.sendMessage(msg);
+					}
 				}
 			});
 		}
@@ -245,7 +251,14 @@ public class FileBrowserActivity extends Activity {
 			public void close() {
 				localTransport = null;
 			}
-		}, dirChangeHandler);
+		}, dirChangeHandler, new Handler() {
+			public void handleMessage(Message msg) {
+				FileInfo fi = (FileInfo) msg.obj;
+				hostBridge.startFileUpload(localController.getCurrentDirectory() + "/" + fi.name,
+				                           remoteController.getCurrentDirectory() + "/" + fi.name);
+
+			}
+		});
 		localController.navigate(null);
 
 		remoteController = new FileTransferController(listRemote, new FileTransportSource() {
@@ -262,7 +275,10 @@ public class FileBrowserActivity extends Activity {
 				hostBridge.releaseFileTransport(fileTransport);
 				fileTransport = null;
 			}
-		}, dirChangeHandler);
+		}, dirChangeHandler, new Handler() {
+			public void handleMessage(Message msg) {
+			}
+		});
 
 		inflater = LayoutInflater.from(this);
 	}
