@@ -43,7 +43,7 @@ import android.widget.TabHost.TabSpec;
 import android.widget.TabHost.OnTabChangeListener;
 import android.widget.TextView;
 
-public class FileTransferActivity extends Activity {
+public class FileBrowserActivity extends Activity {
 
 	private ListView listLocal, listRemote;
 	private TabHost tabs = null;
@@ -90,7 +90,7 @@ public class FileTransferActivity extends Activity {
 					return;
 				updating = true;
 			}
-			synchronized (FileTransferActivity.this) {
+			synchronized (FileBrowserActivity.this) {
 				updateCount++;
 				if (updateCount == 1)
 					setProgressBarIndeterminateVisibility(true);
@@ -139,10 +139,10 @@ public class FileTransferActivity extends Activity {
 
 					new Handler(Looper.getMainLooper()) {
 						public void handleMessage(Message msg) {
-							FileAdapter fileAdapter = new FileAdapter(FileTransferActivity.this, fileList);
+							FileAdapter fileAdapter = new FileAdapter(FileBrowserActivity.this, fileList);
 							view.setAdapter(fileAdapter);
 
-							synchronized (FileTransferActivity.this) {
+							synchronized (FileBrowserActivity.this) {
 								updateCount--;
 								if (updateCount == 0)
 									setProgressBarIndeterminateVisibility(false);
@@ -158,12 +158,12 @@ public class FileTransferActivity extends Activity {
 			} catch (final IOException e) {
 				new Handler(Looper.getMainLooper()) {
 					public void handleMessage(Message msg) {
-						new AlertDialog.Builder(FileTransferActivity.this)
+						new AlertDialog.Builder(FileBrowserActivity.this)
 							.setTitle("Error")
 							.setMessage(e.getMessage())
 							.setPositiveButton("OK", null)
 							.show();
-						synchronized (FileTransferActivity.this) {
+						synchronized (FileBrowserActivity.this) {
 							updateCount--;
 							if (updateCount == 0)
 								setProgressBarIndeterminateVisibility(false);
@@ -367,7 +367,7 @@ public class FileTransferActivity extends Activity {
 			holder.icon.setImageResource(fi.isDirectory ? R.drawable.ic_folder : R.drawable.ic_file);
 			holder.filename.setText(fi.name);
 			holder.size.setText(!fi.isDirectory && fi.size != null
-					? Formatter.formatFileSize(FileTransferActivity.this, fi.size.longValue())
+					? Formatter.formatFileSize(FileBrowserActivity.this, fi.size.longValue())
 					: "");
 			holder.perms.setText(fi.permissions != null
 					? formatPermissions(fi.permissions.intValue())
