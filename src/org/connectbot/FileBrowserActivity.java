@@ -293,6 +293,13 @@ public class FileBrowserActivity extends Activity {
 			hostdb = new HostDatabase(this);
 	}
 
+	public void onRestart() {
+		super.onRestart();
+
+		if (hostBridge == null || hostBridge.isDisconnected())
+			finish();
+	}
+
 	@Override
 	public void onStop() {
 		super.onStop();
@@ -308,7 +315,8 @@ public class FileBrowserActivity extends Activity {
 	protected Handler updateHandler = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {
-			remoteController.navigate(null);
+			if (hostBridge != null && !hostBridge.isDisconnected())
+				remoteController.navigate(null);
 		}
 	};
 
