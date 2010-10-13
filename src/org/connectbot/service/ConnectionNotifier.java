@@ -18,6 +18,7 @@
 package org.connectbot.service;
 
 import org.connectbot.ConsoleActivity;
+import org.connectbot.FileBrowserActivity;
 import org.connectbot.R;
 import org.connectbot.bean.HostBean;
 import org.connectbot.util.HostDatabase;
@@ -31,6 +32,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.widget.RemoteViews;
 
 /**
  * @author Kenny Root
@@ -40,6 +42,8 @@ import android.graphics.Color;
 public abstract class ConnectionNotifier {
 	private static final int ONLINE_NOTIFICATION = 1;
 	private static final int ACTIVITY_NOTIFICATION = 2;
+
+	private int fileTransferNotificationId = 3;
 
 	 public static ConnectionNotifier getInstance() {
 		if (PreferenceConstants.PRE_ECLAIR)
@@ -116,12 +120,64 @@ public abstract class ConnectionNotifier {
 		return notification;
 	}
 
+	public class FileTransferNotification {
+
+		Notification notification;
+		int notificationId;
+		RemoteViews view;
+
+		public void update(long progress, long total) {
+			while (total > Integer.MAX_VALUE) {
+				progress /= 2;
+				total /= 2;
+			}
+			view.setProgressBar(R.id.progress_bar, (int) total, (int) progress, false);
+		}
+
+	}
+
+	protected FileTransferNotification newFileTransferNotification(Context context, HostBean host) {
+		Notification notification = newNotification(context);
+
+		notification.flags = Notification.FLAG_ONGOING_EVENT
+				| Notification.FLAG_NO_CLEAR;
+
+		RemoteViews view = new RemoteViews("org.connectbot",
+				R.layout.status_bar_ongoing_event_progress_bar);
+
+		notification.contentView = view;
+
+		FileTransferNotification fxNotification = new FileTransferNotification();
+		fxNotification.notification = notification;
+		fxNotification.view = view;
+
+		Intent notificationIntent = new Intent(context, FileBrowserActivity.class);
+		notificationIntent.putExtra(Intent.EXTRA_TITLE, host.getId());
+
+		notification.contentIntent = PendingIntent.getActivity(context, 0,
+				notificationIntent, 0);
+
+		return fxNotification;
+	}
+
 	public void showActivityNotification(Service context, HostBean host) {
 		getNotificationManager(context).notify(ACTIVITY_NOTIFICATION, newActivityNotification(context, host));
 	}
 
 	public void hideActivityNotification(Service context) {
 		getNotificationManager(context).cancel(ACTIVITY_NOTIFICATION);
+	}
+
+	public FileTransferNotification showFileTransferNotification(Service context, HostBean host, String filename) {
+		FileTransferNotification fxNotification = newFileTransferNotification(context, host);
+		fxNotification.notificationId = fileTransferNotificationId++;
+
+		getNotificationManager(context).notify(fxNotification.notificationId, fxNotification.notification);
+		return fxNotification;
+	}
+
+	public void hideFileTransferNotification(Service context, FileTransferNotification notification) {
+		getNotificationManager(context).cancel(notification.notificationId);
 	}
 
 	public abstract void showRunningNotification(Service context);

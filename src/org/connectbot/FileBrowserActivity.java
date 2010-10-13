@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.connectbot.bean.HostBean;
+import org.connectbot.service.FileTransferTask;
 import org.connectbot.service.TerminalBridge;
 import org.connectbot.service.TerminalManager;
 import org.connectbot.transport.FileTransport;
@@ -52,6 +53,7 @@ public class FileBrowserActivity extends Activity {
 	private HostBean host;
 
 	private ServiceConnection connection = null;
+	protected TerminalManager manager = null;
 	protected TerminalBridge hostBridge = null;
 
 	protected LayoutInflater inflater = null;
@@ -193,6 +195,12 @@ public class FileBrowserActivity extends Activity {
 
 	FileTransferController localController, remoteController;
 
+	private void startFileUpload(String localBase, String remoteBase) {
+		FileTransferTask task = new FileTransferTask(manager, hostBridge, localBase);
+		task.execute(localController.getCurrentDirectory() + "/" + localBase,
+		             remoteController.getCurrentDirectory() + "/" + remoteBase);
+	}
+
 	@Override
 	public void onCreate(Bundle b) {
 		super.onCreate(b);
@@ -205,9 +213,9 @@ public class FileBrowserActivity extends Activity {
 
 		connection = new ServiceConnection() {
 			public void onServiceConnected(ComponentName className, IBinder service) {
-				TerminalManager bound = ((TerminalManager.TerminalBinder) service).getService();
+				manager = ((TerminalManager.TerminalBinder) service).getService();
 
-				hostBridge = bound.getConnectedBridge(host);
+				hostBridge = manager.getConnectedBridge(host);
 				updateHandler.sendEmptyMessage(-1);
 			}
 
@@ -215,6 +223,7 @@ public class FileBrowserActivity extends Activity {
 				localController.close();
 				remoteController.close();
 
+				manager = null;
 				hostBridge = null;
 			}
 		};
@@ -254,9 +263,7 @@ public class FileBrowserActivity extends Activity {
 		}, dirChangeHandler, new Handler() {
 			public void handleMessage(Message msg) {
 				FileInfo fi = (FileInfo) msg.obj;
-				hostBridge.startFileUpload(localController.getCurrentDirectory() + "/" + fi.name,
-				                           remoteController.getCurrentDirectory() + "/" + fi.name);
-
+				startFileUpload(fi.name, fi.name);
 			}
 		});
 		localController.navigate(null);
