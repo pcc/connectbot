@@ -136,7 +136,7 @@ public abstract class ConnectionNotifier {
 
 	}
 
-	protected FileTransferNotification newFileTransferNotification(Context context, HostBean host) {
+	protected FileTransferNotification newFileTransferNotification(Context context, HostBean host, String filename) {
 		Notification notification = newNotification(context);
 
 		notification.flags = Notification.FLAG_ONGOING_EVENT
@@ -144,6 +144,8 @@ public abstract class ConnectionNotifier {
 
 		RemoteViews view = new RemoteViews("org.connectbot",
 				R.layout.status_bar_ongoing_event_progress_bar);
+		view.setTextViewText(R.id.title, filename);
+		view.setTextViewText(R.id.description, host.getNickname());
 
 		notification.contentView = view;
 
@@ -169,7 +171,7 @@ public abstract class ConnectionNotifier {
 	}
 
 	public FileTransferNotification showFileTransferNotification(Service context, HostBean host, String filename) {
-		FileTransferNotification fxNotification = newFileTransferNotification(context, host);
+		FileTransferNotification fxNotification = newFileTransferNotification(context, host, filename);
 		fxNotification.notificationId = fileTransferNotificationId++;
 
 		getNotificationManager(context).notify(fxNotification.notificationId, fxNotification.notification);
