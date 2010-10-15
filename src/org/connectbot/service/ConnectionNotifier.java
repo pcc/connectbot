@@ -136,8 +136,9 @@ public abstract class ConnectionNotifier {
 
 	}
 
-	protected FileTransferNotification newFileTransferNotification(Context context, HostBean host, String filename) {
+	protected FileTransferNotification newFileTransferNotification(Context context, HostBean host, String filename, boolean isUpload) {
 		Notification notification = newNotification(context);
+		notification.icon = isUpload ? android.R.drawable.stat_sys_upload : android.R.drawable.stat_sys_download;
 
 		notification.flags = Notification.FLAG_ONGOING_EVENT
 				| Notification.FLAG_NO_CLEAR;
@@ -170,8 +171,8 @@ public abstract class ConnectionNotifier {
 		getNotificationManager(context).cancel(ACTIVITY_NOTIFICATION);
 	}
 
-	public FileTransferNotification showFileTransferNotification(Service context, HostBean host, String filename) {
-		FileTransferNotification fxNotification = newFileTransferNotification(context, host, filename);
+	public FileTransferNotification showFileTransferNotification(Service context, HostBean host, String filename, boolean isUpload) {
+		FileTransferNotification fxNotification = newFileTransferNotification(context, host, filename, isUpload);
 		fxNotification.notificationId = fileTransferNotificationId++;
 
 		getNotificationManager(context).notify(fxNotification.notificationId, fxNotification.notification);

@@ -23,7 +23,7 @@ public class FileTransferTask extends AsyncTask<String, Long, Boolean> {
 	}
 
 	protected void onPreExecute() {
-		notification = ConnectionNotifier.getInstance().showFileTransferNotification(context, bridge.host, filename);
+		notification = ConnectionNotifier.getInstance().showFileTransferNotification(context, bridge.host, filename, true);
 	}
 
 	protected Boolean doInBackground(String... paths) {
