@@ -196,7 +196,13 @@ public class FileBrowserActivity extends Activity {
 	FileTransferController localController, remoteController;
 
 	private void startFileUpload(String localBase, String remoteBase) {
-		FileTransferTask task = new FileTransferTask(manager, hostBridge, localBase);
+		FileTransferTask task = new FileTransferTask(manager, hostBridge, localBase, FileTransferTask.UPLOAD);
+		task.execute(localController.getCurrentDirectory() + "/" + localBase,
+		             remoteController.getCurrentDirectory() + "/" + remoteBase);
+	}
+
+	private void startFileDownload(String localBase, String remoteBase) {
+		FileTransferTask task = new FileTransferTask(manager, hostBridge, remoteBase, FileTransferTask.DOWNLOAD);
 		task.execute(localController.getCurrentDirectory() + "/" + localBase,
 		             remoteController.getCurrentDirectory() + "/" + remoteBase);
 	}
@@ -284,6 +290,8 @@ public class FileBrowserActivity extends Activity {
 			}
 		}, dirChangeHandler, new Handler() {
 			public void handleMessage(Message msg) {
+				FileInfo fi = (FileInfo) msg.obj;
+				startFileDownload(fi.name, fi.name);
 			}
 		});
 

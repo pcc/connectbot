@@ -3,6 +3,7 @@ package org.connectbot.transport;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Vector;
 
@@ -66,7 +67,24 @@ public class SFTPFileTransport implements FileTransport {
 				break;
 
 			sftp.write(fh, ofs, buf, 0, len);
-			ofs += 32768;
+			ofs += len;
+		}
+
+		sftp.closeFile(fh);
+	}
+
+	public void get(String path, OutputStream out) throws IOException {
+		SFTPv3FileHandle fh = sftp.openFileRO(path);
+
+		byte buf[] = new byte[32768];
+		long ofs = 0;
+		while (true) {
+			int len = sftp.read(fh, ofs, buf, 0, 32768);
+			if (len <= 0)
+				break;
+
+			out.write(buf, 0, len);
+			ofs += len;
 		}
 
 		sftp.closeFile(fh);
