@@ -148,6 +148,7 @@ public class FileBrowserActivity extends Activity {
 					new Handler(Looper.getMainLooper()) {
 						public void handleMessage(Message msg) {
 							FileAdapter fileAdapter = new FileAdapter(FileBrowserActivity.this, fileList);
+							view.clearTextFilter();
 							view.setAdapter(fileAdapter);
 
 							synchronized (FileBrowserActivity.this) {

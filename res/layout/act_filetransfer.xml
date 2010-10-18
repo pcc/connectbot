@@ -18,11 +18,13 @@
             <ListView 
                 android:id="@+id/localview"
                 android:layout_width="fill_parent"
-                android:layout_height="fill_parent" />
+                android:layout_height="fill_parent"
+                android:textFilterEnabled="true" />
             <ListView 
                 android:id="@+id/remoteview"
                 android:layout_width="fill_parent"
-                android:layout_height="fill_parent" />
+                android:layout_height="fill_parent"
+                android:textFilterEnabled="true" />
         </FrameLayout>
     </LinearLayout>
 </TabHost>
