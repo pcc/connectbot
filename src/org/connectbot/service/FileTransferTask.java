@@ -10,7 +10,7 @@ import org.connectbot.transport.FileTransport;
 import android.app.Service;
 import android.os.AsyncTask;
 
-public class FileTransferTask extends AsyncTask<String, Long, Boolean> {
+public class FileTransferTask extends AsyncTask<String, Long, String> {
 
 	public static final boolean UPLOAD = true;
 	public static final boolean DOWNLOAD = false;
@@ -32,10 +32,10 @@ public class FileTransferTask extends AsyncTask<String, Long, Boolean> {
 		notification = ConnectionNotifier.getInstance().showFileTransferNotification(context, bridge.host, filename, isUpload);
 	}
 
-	protected Boolean doInBackground(String... paths) {
+	protected String doInBackground(String... paths) {
 		String localPath = paths[0], remotePath = paths[1];
 		FileTransport fileTransport = null;
-		boolean result;
+		String result;
 		try {
 			fileTransport = bridge.getFileTransport();
 			if (isUpload) {
@@ -46,17 +46,17 @@ public class FileTransferTask extends AsyncTask<String, Long, Boolean> {
 				fileTransport.get(remotePath, out);
 			}
 
-			result = true;
+			result = null;
 		} catch (IOException e) {
-			result = false;
+			result = e.toString();
 		} finally {
 			if (fileTransport != null)
 				bridge.releaseFileTransport(fileTransport);
 		}
-		return Boolean.valueOf(result);
+		return result;
 	}
 
-	protected void onPostExecute(Boolean result) {
+	protected void onPostExecute(String result) {
 		ConnectionNotifier.getInstance().hideFileTransferNotification(context, notification);
 	}
 
