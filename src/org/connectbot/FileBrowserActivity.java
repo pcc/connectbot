@@ -21,6 +21,8 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
@@ -72,6 +74,7 @@ public class FileBrowserActivity extends Activity {
 		private String currentDirectory;
 		private Handler onDirectoryChange, onFileSelected;
 		private boolean updating;
+		private List<FileInfo> fileList;
 
 		public FileTransferController(ListView view, FileTransportSource ts, Handler onDirectoryChange, Handler onFileSelected) {
 			this.view = view;
@@ -128,7 +131,7 @@ public class FileBrowserActivity extends Activity {
 				try {
 					FileInfo files[] = fileTransport.ls(nextDirectory);
 					Arrays.sort(files);
-					final ArrayList<FileInfo> fileList = new ArrayList<FileInfo>();
+					final List<FileInfo> fileList = this.fileList = new ArrayList<FileInfo>();
 
 					for (FileInfo file : files) {
 						if (file.name.equals(".")) continue;
@@ -170,7 +173,7 @@ public class FileBrowserActivity extends Activity {
 						new AlertDialog.Builder(FileBrowserActivity.this)
 							.setTitle("Error")
 							.setMessage(e.getMessage())
-							.setPositiveButton("OK", null)
+							.setPositiveButton(android.R.string.ok, null)
 							.show();
 						synchronized (FileBrowserActivity.this) {
 							updateCount--;
@@ -188,6 +191,14 @@ public class FileBrowserActivity extends Activity {
 			return currentDirectory;
 		}
 
+		public boolean fileExistsWithName(String name) {
+			for (FileInfo fi : fileList) {
+				if (fi.name.equals(name))
+					return true;
+			}
+			return false;
+		}
+
 		public void close() {
 			ts.close();
 		}
@@ -196,16 +207,28 @@ public class FileBrowserActivity extends Activity {
 
 	FileTransferController localController, remoteController;
 
-	private void startFileUpload(String localBase, String remoteBase) {
-		FileTransferTask task = new FileTransferTask(manager, hostBridge, localBase, FileTransferTask.UPLOAD);
-		task.execute(localController.getCurrentDirectory() + "/" + localBase,
-		             remoteController.getCurrentDirectory() + "/" + remoteBase);
+	private void requestFileTransfer(final String localBase, final String remoteBase, final boolean isUpload) {
+		final String localDir = localController.getCurrentDirectory();
+		final String remoteDir = remoteController.getCurrentDirectory();
+		if (isUpload ? remoteController.fileExistsWithName(remoteBase)
+		             : localController.fileExistsWithName(localBase)) {
+			new AlertDialog.Builder(this)
+				.setTitle("Warning")
+				.setMessage("A file named "+(isUpload ? remoteBase : localBase)+" already exists in "+(isUpload ? remoteDir : localDir)+"; overwrite?")
+				.setNegativeButton(android.R.string.cancel, null)
+				.setPositiveButton(android.R.string.ok, new OnClickListener() {
+					public void onClick(DialogInterface dialog, int which) {
+						startFileTransfer(localDir, localBase, remoteDir, remoteBase, isUpload);
+					}
+				}).show();
+		} else {
+			startFileTransfer(localDir, localBase, remoteDir, remoteBase, isUpload);
+		}
 	}
 
-	private void startFileDownload(String localBase, String remoteBase) {
-		FileTransferTask task = new FileTransferTask(manager, hostBridge, remoteBase, FileTransferTask.DOWNLOAD);
-		task.execute(localController.getCurrentDirectory() + "/" + localBase,
-		             remoteController.getCurrentDirectory() + "/" + remoteBase);
+	private void startFileTransfer(String localDir, String localBase, String remoteDir, String remoteBase, boolean isUpload) {
+		FileTransferTask task = new FileTransferTask(manager, hostBridge, isUpload ? localBase : remoteBase, isUpload);
+		task.execute(localDir + "/" + localBase, remoteDir + "/" + remoteBase);
 	}
 
 	@Override
@@ -270,7 +293,7 @@ public class FileBrowserActivity extends Activity {
 		}, dirChangeHandler, new Handler() {
 			public void handleMessage(Message msg) {
 				FileInfo fi = (FileInfo) msg.obj;
-				startFileUpload(fi.name, fi.name);
+				requestFileTransfer(fi.name, fi.name, FileTransferTask.UPLOAD);
 			}
 		});
 		localController.navigate(null);
@@ -292,7 +315,7 @@ public class FileBrowserActivity extends Activity {
 		}, dirChangeHandler, new Handler() {
 			public void handleMessage(Message msg) {
 				FileInfo fi = (FileInfo) msg.obj;
-				startFileDownload(fi.name, fi.name);
+				requestFileTransfer(fi.name, fi.name, FileTransferTask.DOWNLOAD);
 			}
 		});
 
