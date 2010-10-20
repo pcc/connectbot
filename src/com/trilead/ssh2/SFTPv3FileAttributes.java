@@ -1,6 +1,8 @@
 
 package com.trilead.ssh2;
 
+import static com.trilead.ssh2.sftp.AttribPermissions.*;
+
 /**
  * A <code>SFTPv3FileAttributes</code> object represents detail information
  * about a file on the server. Not all fields may/must be present.
@@ -84,7 +86,7 @@ public class SFTPv3FileAttributes
 		if (permissions == null)
 			return false;
 		
-		return ((permissions.intValue() & 0040000) != 0);
+		return ((permissions.intValue() & S_IFMT) == S_IFDIR);
 	}
 	
 	/**
