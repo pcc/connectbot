@@ -462,9 +462,15 @@ public class FileBrowserActivity extends Activity {
 
 			holder.icon.setImageResource(fi.isDirectory ? R.drawable.ic_folder : R.drawable.ic_file);
 			holder.filename.setText(fi.name);
-			holder.size.setText(!fi.isDirectory && fi.size != null
-					? Formatter.formatFileSize(FileBrowserActivity.this, fi.size.longValue())
-					: "");
+			String sizeStr = "";
+			if (fi.lastModified != null)
+				sizeStr = String.format("%tF %tT", fi.lastModified, fi.lastModified);
+			if (!fi.isDirectory && fi.size != null) {
+				if (fi.lastModified != null)
+					sizeStr += ", ";
+				sizeStr += Formatter.formatFileSize(FileBrowserActivity.this, fi.size.longValue());
+			}
+			holder.size.setText(sizeStr);
 			holder.perms.setText(fi.permissions != null
 					? formatPermissions(fi.permissions.intValue())
 					: "");
