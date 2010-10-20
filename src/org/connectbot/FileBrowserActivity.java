@@ -400,18 +400,30 @@ public class FileBrowserActivity extends Activity {
 		setTitle(curDir);
 	}
 
-	private String formatPermissions(int perms) {
+	private static String formatPermissions(int perms) {
 		char permStr[] = { '-', '-', '-', '-', '-', '-', '-', '-', '-', '-' };
-		if ((perms & S_IFMT) == S_IFDIR) permStr[0] = 'd';
-		if ((perms & S_IRUSR) != 0)      permStr[1] = 'r';
-		if ((perms & S_IWUSR) != 0)      permStr[2] = 'w';
-		if ((perms & S_IXUSR) != 0)      permStr[3] = 'x';
-		if ((perms & S_IRGRP) != 0)      permStr[4] = 'r';
-		if ((perms & S_IWGRP) != 0)      permStr[5] = 'w';
-		if ((perms & S_IXGRP) != 0)      permStr[6] = 'x';
-		if ((perms & S_IROTH) != 0)      permStr[7] = 'r';
-		if ((perms & S_IWOTH) != 0)      permStr[8] = 'w';
-		if ((perms & S_IXOTH) != 0)      permStr[9] = 'x';
+		switch (perms & S_IFMT) {
+			case S_IFSOCK: permStr[0] = 's'; break;
+			case S_IFLNK:  permStr[0] = 'l'; break;
+			case S_IFREG:  permStr[0] = '-'; break;
+			case S_IFBLK:  permStr[0] = 'b'; break;
+			case S_IFDIR:  permStr[0] = 'd'; break;
+			case S_IFCHR:  permStr[0] = 'c'; break;
+			case S_IFIFO:  permStr[0] = 'p'; break;
+			default:       permStr[0] = '?'; break;
+		}
+		if ((perms & S_IRUSR) != 0) permStr[1] = 'r';
+		if ((perms & S_IWUSR) != 0) permStr[2] = 'w';
+		if ((perms & S_IXUSR) != 0) permStr[3] = ((perms & S_ISUID) != 0) ? 's' : 'x';
+		else                        permStr[3] = ((perms & S_ISUID) != 0) ? 'S' : '-';
+		if ((perms & S_IRGRP) != 0) permStr[4] = 'r';
+		if ((perms & S_IWGRP) != 0) permStr[5] = 'w';
+		if ((perms & S_IXGRP) != 0) permStr[6] = ((perms & S_ISGID) != 0) ? 's' : 'x';
+		else                        permStr[6] = ((perms & S_ISGID) != 0) ? 'S' : '-';
+		if ((perms & S_IROTH) != 0) permStr[7] = 'r';
+		if ((perms & S_IWOTH) != 0) permStr[8] = 'w';
+		if ((perms & S_IXOTH) != 0) permStr[9] = ((perms & S_ISVTX) != 0) ? 't' : 'x';
+		else                        permStr[9] = ((perms & S_ISVTX) != 0) ? 'T' : '-';
 		return new String(permStr);
 	}
 
