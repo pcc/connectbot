@@ -19,11 +19,13 @@ import static com.trilead.ssh2.sftp.AttribPermissions.*;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.Handler;
@@ -227,7 +229,7 @@ public class FileBrowserActivity extends Activity {
 	}
 
 	private void startFileTransfer(String localDir, String localBase, String remoteDir, String remoteBase, boolean isUpload) {
-		FileTransferTask task = new FileTransferTask(manager, hostBridge, isUpload ? localBase : remoteBase, isUpload);
+		FileTransferTask task = new FileTransferTask(manager, hostBridge, isUpload ? remoteDir : localDir, isUpload ? localBase : remoteBase, isUpload);
 		task.execute(localDir + "/" + localBase, remoteDir + "/" + remoteBase);
 	}
 
@@ -318,6 +320,25 @@ public class FileBrowserActivity extends Activity {
 				requestFileTransfer(fi.name, fi.name, FileTransferTask.DOWNLOAD);
 			}
 		});
+
+		registerReceiver(new BroadcastReceiver() {
+			public void onReceive(Context context, Intent intent) {
+				if (intent.hasExtra("localPath")) {
+					String intPath = intent.getStringExtra("localPath");
+					if (intPath.equals(localController.getCurrentDirectory())) {
+						localController.navigate(null);
+					}
+				} else if (intent.hasExtra("remotePath")) {
+					long intHost = intent.getLongExtra("remoteHost", -1);
+					if (intHost == hostBridge.host.getId()) {
+						String intPath = intent.getStringExtra("remotePath");
+						if (intPath.equals(remoteController.getCurrentDirectory())) {
+							remoteController.navigate(null);
+						}
+					}
+				}
+			}
+		}, new IntentFilter("org.connectbot.FileListChanged"));
 
 		inflater = LayoutInflater.from(this);
 	}

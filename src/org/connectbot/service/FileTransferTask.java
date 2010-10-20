@@ -8,6 +8,7 @@ import org.connectbot.service.ConnectionNotifier.FileTransferNotification;
 import org.connectbot.transport.FileTransport;
 
 import android.app.Service;
+import android.content.Intent;
 import android.os.AsyncTask;
 
 public class FileTransferTask extends AsyncTask<String, Long, String> {
@@ -17,13 +18,15 @@ public class FileTransferTask extends AsyncTask<String, Long, String> {
 
 	protected Service context;
 	protected TerminalBridge bridge;
+	protected String changePath;
 	protected String filename;
 	protected boolean isUpload;
 	protected FileTransferNotification notification;
 
-	public FileTransferTask(Service context, TerminalBridge bridge, String filename, boolean isUpload) {
+	public FileTransferTask(Service context, TerminalBridge bridge, String changePath, String filename, boolean isUpload) {
 		this.context = context;
 		this.bridge = bridge;
+		this.changePath = changePath;
 		this.filename = filename;
 		this.isUpload = isUpload;
 	}
@@ -58,6 +61,15 @@ public class FileTransferTask extends AsyncTask<String, Long, String> {
 
 	protected void onPostExecute(String result) {
 		ConnectionNotifier.getInstance().hideFileTransferNotification(context, notification);
+
+		Intent fileListChanged = new Intent("org.connectbot.FileListChanged");
+		if (isUpload) {
+			fileListChanged.putExtra("remoteHost", bridge.host.getId());
+			fileListChanged.putExtra("remotePath", changePath);
+		} else {
+			fileListChanged.putExtra("localPath", changePath);
+		}
+		context.sendBroadcast(fileListChanged);
 	}
 
 }
