@@ -6,6 +6,7 @@ public class FileInfo implements Comparable<FileInfo> {
 	public boolean isDirectory;
 	public Long size;
 	public Integer permissions;
+	public Long lastModified;
 
 	public String toString() {
 		return name;

@@ -38,6 +38,8 @@ public class SFTPFileTransport implements FileTransport {
 		info.isDirectory = entry.isDirectory();
 		info.size = entry.size;
 		info.permissions = entry.permissions;
+		if (entry.mtime != null)
+			info.lastModified = new Long(entry.mtime.longValue() * 1000);
 		return info;
 	}
 

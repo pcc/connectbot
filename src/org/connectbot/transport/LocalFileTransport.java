@@ -28,6 +28,7 @@ public class LocalFileTransport implements FileTransport {
 		fi.name = f.getName();
 		fi.isDirectory = f.isDirectory();
 		fi.size = new Long(f.length());
+		fi.lastModified = new Long(f.lastModified());
 		return fi;
 	}
 
