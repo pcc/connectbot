@@ -463,10 +463,10 @@ public class FileBrowserActivity extends Activity {
 			holder.icon.setImageResource(fi.isDirectory ? R.drawable.ic_folder : R.drawable.ic_file);
 			holder.filename.setText(fi.name);
 			String sizeStr = "";
-			if (fi.lastModified != null)
+			if (fi.lastModified != null && fi.lastModified.longValue() != 0)
 				sizeStr = String.format("%tF %tT", fi.lastModified, fi.lastModified);
 			if (!fi.isDirectory && fi.size != null) {
-				if (fi.lastModified != null)
+				if (fi.lastModified != null && fi.lastModified.longValue() != 0)
 					sizeStr += ", ";
 				sizeStr += Formatter.formatFileSize(FileBrowserActivity.this, fi.size.longValue());
 			}
