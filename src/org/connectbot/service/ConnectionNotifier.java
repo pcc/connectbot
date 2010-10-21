@@ -122,16 +122,21 @@ public abstract class ConnectionNotifier {
 
 	public class FileTransferNotification {
 
+		Context context;
 		Notification notification;
 		int notificationId;
-		RemoteViews view;
 
 		public void update(long progress, long total) {
 			while (total > Integer.MAX_VALUE) {
 				progress /= 2;
 				total /= 2;
 			}
-			view.setProgressBar(R.id.progress_bar, (int) total, (int) progress, false);
+			notification.contentView.setProgressBar(R.id.progress_bar, (int) total, (int) progress, false);
+			doNotify();
+		}
+
+		public void doNotify() {
+			getNotificationManager(context).notify(notificationId, notification);
 		}
 
 	}
@@ -151,8 +156,9 @@ public abstract class ConnectionNotifier {
 		notification.contentView = view;
 
 		FileTransferNotification fxNotification = new FileTransferNotification();
+		fxNotification.context = context;
 		fxNotification.notification = notification;
-		fxNotification.view = view;
+		fxNotification.notificationId = fileTransferNotificationId++;
 
 		Intent notificationIntent = new Intent(context, FileBrowserActivity.class);
 		notificationIntent.putExtra(Intent.EXTRA_TITLE, host.getId());
@@ -174,9 +180,8 @@ public abstract class ConnectionNotifier {
 
 	public FileTransferNotification showFileTransferNotification(Service context, HostBean host, String filename, boolean isUpload) {
 		FileTransferNotification fxNotification = newFileTransferNotification(context, host, filename, isUpload);
-		fxNotification.notificationId = fileTransferNotificationId++;
+		fxNotification.doNotify();
 
-		getNotificationManager(context).notify(fxNotification.notificationId, fxNotification.notification);
 		return fxNotification;
 	}
 
