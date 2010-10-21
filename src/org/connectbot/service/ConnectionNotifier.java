@@ -156,6 +156,7 @@ public abstract class ConnectionNotifier {
 
 		Intent notificationIntent = new Intent(context, FileBrowserActivity.class);
 		notificationIntent.putExtra(Intent.EXTRA_TITLE, host.getId());
+		notificationIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
 
 		notification.contentIntent = PendingIntent.getActivity(context, 0,
 				notificationIntent, 0);

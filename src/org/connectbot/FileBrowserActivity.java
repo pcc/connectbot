@@ -343,6 +343,15 @@ public class FileBrowserActivity extends Activity {
 		inflater = LayoutInflater.from(this);
 	}
 
+	public void onNewIntent(Intent intent) {
+		long hostId = intent.getLongExtra(Intent.EXTRA_TITLE, -1);
+		if (hostId != host.getId()) {
+			intent.setFlags(intent.getFlags() & ~Intent.FLAG_ACTIVITY_SINGLE_TOP);
+			startActivity(intent);
+			return;
+		}
+	}
+
 	@Override
 	public void onStart() {
 		super.onStart();
