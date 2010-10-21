@@ -45,7 +45,7 @@ public abstract class ConnectionNotifier {
 
 	private int fileTransferNotificationId = 3;
 
-	 public static ConnectionNotifier getInstance() {
+	public static ConnectionNotifier getInstance() {
 		if (PreferenceConstants.PRE_ECLAIR)
 			return PreEclair.Holder.sInstance;
 		else
