@@ -6,12 +6,13 @@ import java.io.IOException;
 
 import org.connectbot.service.ConnectionNotifier.FileTransferNotification;
 import org.connectbot.transport.FileTransport;
+import org.connectbot.transport.FileProgressListener;
 
 import android.app.Service;
 import android.content.Intent;
 import android.os.AsyncTask;
 
-public class FileTransferTask extends AsyncTask<String, Long, String> {
+public class FileTransferTask extends AsyncTask<String, Long, String> implements FileProgressListener {
 
 	public static final boolean UPLOAD = true;
 	public static final boolean DOWNLOAD = false;
@@ -20,14 +21,16 @@ public class FileTransferTask extends AsyncTask<String, Long, String> {
 	protected TerminalBridge bridge;
 	protected String changePath;
 	protected String filename;
+	protected long size;
 	protected boolean isUpload;
 	protected FileTransferNotification notification;
 
-	public FileTransferTask(Service context, TerminalBridge bridge, String changePath, String filename, boolean isUpload) {
+	public FileTransferTask(Service context, TerminalBridge bridge, String changePath, String filename, long size, boolean isUpload) {
 		this.context = context;
 		this.bridge = bridge;
 		this.changePath = changePath;
 		this.filename = filename;
+		this.size = size;
 		this.isUpload = isUpload;
 	}
 
@@ -43,10 +46,10 @@ public class FileTransferTask extends AsyncTask<String, Long, String> {
 			fileTransport = bridge.getFileTransport();
 			if (isUpload) {
 				FileInputStream in = new FileInputStream(localPath);
-				fileTransport.put(remotePath, in, null);
+				fileTransport.put(remotePath, in, this);
 			} else {
 				FileOutputStream out = new FileOutputStream(localPath);
-				fileTransport.get(remotePath, out, null);
+				fileTransport.get(remotePath, out, this);
 			}
 
 			result = null;
@@ -57,6 +60,14 @@ public class FileTransferTask extends AsyncTask<String, Long, String> {
 				bridge.releaseFileTransport(fileTransport);
 		}
 		return result;
+	}
+
+	public void onFileProgress(long bytes) {
+		publishProgress(new Long(bytes));
+	}
+
+	public void onProgressUpdate(Long... bytes) {
+		notification.update(bytes[0], size);
 	}
 
 	protected void onPostExecute(String result) {
