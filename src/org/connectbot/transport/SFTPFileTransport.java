@@ -58,12 +58,13 @@ public class SFTPFileTransport implements FileTransport {
 		return infos.toArray(new FileInfo[infos.size()]);
 	}
 
-	public void put(String path, InputStream in) throws IOException {
+	public void put(String path, InputStream in, FileProgressListener progress) throws IOException {
 		SFTPv3FileHandle fh = sftp.createFileTruncate(path);
 
 		byte buf[] = new byte[32768];
 		long ofs = 0;
 		while (true) {
+			if (progress != null) progress.onFileProgress(ofs);
 			int len = in.read(buf);
 			if (len <= 0)
 				break;
@@ -75,12 +76,13 @@ public class SFTPFileTransport implements FileTransport {
 		sftp.closeFile(fh);
 	}
 
-	public void get(String path, OutputStream out) throws IOException {
+	public void get(String path, OutputStream out, FileProgressListener progress) throws IOException {
 		SFTPv3FileHandle fh = sftp.openFileRO(path);
 
 		byte buf[] = new byte[32768];
 		long ofs = 0;
 		while (true) {
+			if (progress != null) progress.onFileProgress(ofs);
 			int len = sftp.read(fh, ofs, buf, 0, 32768);
 			if (len <= 0)
 				break;

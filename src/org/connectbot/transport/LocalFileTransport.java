@@ -43,7 +43,7 @@ public class LocalFileTransport implements FileTransport {
 		return infos.toArray(new FileInfo[infos.size()]);
 	}
 
-	public void put(String path, InputStream in) throws IOException {}
-	public void get(String path, OutputStream out) throws IOException {}
+	public void put(String path, InputStream in, FileProgressListener progress) throws IOException {}
+	public void get(String path, OutputStream out, FileProgressListener progress) throws IOException {}
 
 }

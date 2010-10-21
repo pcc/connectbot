@@ -43,10 +43,10 @@ public class FileTransferTask extends AsyncTask<String, Long, String> {
 			fileTransport = bridge.getFileTransport();
 			if (isUpload) {
 				FileInputStream in = new FileInputStream(localPath);
-				fileTransport.put(remotePath, in);
+				fileTransport.put(remotePath, in, null);
 			} else {
 				FileOutputStream out = new FileOutputStream(localPath);
-				fileTransport.get(remotePath, out);
+				fileTransport.get(remotePath, out, null);
 			}
 
 			result = null;

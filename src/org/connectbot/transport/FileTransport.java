@@ -11,7 +11,7 @@ public interface FileTransport {
 	FileInfo[] ls(String dir) throws IOException;
 	String realpath(String pwd, String dir) throws IOException;
 
-	void put(String path, InputStream in) throws IOException;
-	void get(String path, OutputStream out) throws IOException;
+	void put(String path, InputStream in, FileProgressListener progress) throws IOException;
+	void get(String path, OutputStream out, FileProgressListener progress) throws IOException;
 
 }
